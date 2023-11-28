@@ -142,7 +142,9 @@ class MailSender:
         c.sendall(f'DATA\r\n'.encode())
         response = c.recv(1024).decode()
 
-        email_data = f'Content-Type: multipart/mixed; boundary="{MailSender.randomBoundary()}"\r\n'
+        boundary = MailSender.randomBoundary()
+
+        email_data = f'Content-Type: multipart/mixed; boundary="{boundary}"\r\n'
         email_data += f'Message-ID: <{str(uuid.uuid4())}@gmail.com>\r\n'
         email_data += f'Date: {formatdate(localtime=True)}\r\n'
         email_data += f'MIME-Version: 1.0\r\n'
@@ -170,7 +172,7 @@ class MailSender:
         email_data += f'\nFrom: {username}\r\n'
         email_data += f'Subject: {subject}\r\n\n'
         email_data += f'This is a multi-part message in MIME format.\r\n'
-        email_data += f'--{MailSender.randomBoundary()}\r\n'
+        email_data += f'--{boundary}\r\n'
         email_data += f'Content-Type: text/plain; charset=UTF-8; format=flowed\r\n'
         email_data += f'Content-Transfer-Encoding: 7bit\r\n\n'
 
@@ -178,7 +180,7 @@ class MailSender:
             email_data += f'{content[i]}\r\n\n'
 
         for i in range(len(attached_files)):
-            email_data += f'--{MailSender.randomBoundary()}\r\n'
+            email_data += f'--{boundary}\r\n'
             fileType = MailSender.getFileType(attached_files[i])
             fileName = os.path.basename(attached_files[i])
 
@@ -208,7 +210,7 @@ class MailSender:
                     email_data += f'{file_content_lines}\r\n'
         
         email_data += '\n'
-        email_data += f'--{MailSender.randomBoundary()}--\r\n.\r\n'
+        email_data += f'--{boundary}--\r\n.\r\n'
 
         c.sendall(email_data.encode())
 
@@ -478,25 +480,29 @@ class MailReceiver:
                             line = read_file.readline()
 
                         attached_file_name = line.split('"')[1]
-                        print(attached_file_name)
 
                         read_file.readline()
                         read_file.readline()
-
+                        lines = []
                         with open(os.path.join(folder_link, attached_file_name), 'wb') as write_file:
-                            line = read_file.readline()
-                            while not line in[f'--{boundary}\n', f'--{boundary}']:
-                                if line != '\n':
-                                    while not MailReceiver.is_base64(line):
-                                        line = line + '='
-                                    write_file.write(base64.b64decode(line))
-
+                            with open('C:/Users/NHAT CUONG/Documents/haha.txt', 'w') as file:
                                 line = read_file.readline()
+                                while not line in [f'--{boundary}\n', f'--{boundary}']:
+                                    if line != '\n':
+                                        while not MailReceiver.is_base64(line[:-1]):
+                                            if line.endswith('\n'):
+                                                line = line[:-1] + '=\n'
+                                            else:
+                                                line = line + '=\n'
+                                        file.write(line)
+                                        write_file.write(base64.b64decode(line))
 
-                                if line == f'--{boundary}':
-                                    stop = True
-                                    break
-                
+                                    line = read_file.readline()
+
+                                    if line == f'--{boundary}':
+                                        stop = True
+                                        break
+
                 break
             
             file_index = file_index + 1
@@ -589,7 +595,7 @@ class MailManipulation:
                 if attached_file_check == 1:
                     attached_file_num = int(input('Số lượng file muốn gửi: '))
                     for i in range(attached_file_num):
-                        attached_file = input(f'Cho biết đường dẫn file thứ {i + 1}:')
+                        attached_file = input(f'Cho biết đường dẫn file thứ {i + 1}: ')
                         attached_files.append(attached_file)
                     
                     # Gửi mail có đính kèm file
