@@ -8,7 +8,7 @@ def DowloadMail():
 
 # Làm cái này thì không cần làm 2 cái trên 
 #Tải và lưu vào file 
-def DowloadMail():
+def DowloadMail()://ksnfjkadnfna
         
 # save vào folder Inbox     
 def Save():  
